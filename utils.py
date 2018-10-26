@@ -12,7 +12,7 @@ def transform_datetime_features(df):
 
     for col_name in datetime_columns:
         if len(datetime_columns) < 10:
-            df[col_name] = pd.to_datetime(df[col_name])
+            # df[col_name] = pd.to_datetime(df[col_name])
             df['number_weekday_{}'.format(col_name)] = df[col_name].dt.weekday
             df['number_month_{}'.format(col_name)] = df[col_name].dt.month
             df['number_day_{}'.format(col_name)] = df[col_name].dt.day
@@ -20,7 +20,7 @@ def transform_datetime_features(df):
             df['number_hour_of_week_{}'.format(col_name)] = df[col_name].dt.hour + df[col_name].dt.weekday * 24
             df['number_minute_of_day_{}'.format(col_name)] = df[col_name].dt.minute + df[col_name].dt.hour * 60
         else:
-            df[col_name] = pd.to_datetime(df[col_name])
+            # df[col_name] = pd.to_datetime(df[col_name])
             df['number_weekday_{}'.format(col_name)] = df[col_name].dt.weekday
             df['number_month_{}'.format(col_name)] = df[col_name].dt.month
             df['number_day_{}'.format(col_name)] = df[col_name].dt.day
@@ -71,7 +71,8 @@ def filter_columns(df, groups=['number']):
     for gr in groups:
         used_columns += [col_name for col_name in df.columns
                         if col_name.startswith(gr)]
-    df = df[used_columns]
+    cols_to_drop = df.columns[~df.columns.isin(used_columns)]
+    df.drop(cols_to_drop, axis=1, inplace=True)
 
     return df, used_columns
 

@@ -45,8 +45,8 @@ def preprocess(df, model_config, type='train'):
     df.fillna(-1, inplace=True)
 
     # convert if dataframe is too big
-    if model_config['is_big']:
-        df = df.astype(np.float32)
+    # if model_config['is_big']:
+    #     df = df.astype(np.float16)
 
     if type == 'train':
         return df, model_config

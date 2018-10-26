@@ -25,18 +25,25 @@ if __name__ == '__main__':
 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--train-csv', type=argparse.FileType('r'), required=True)
+    parser.add_argument('--train-csv', required=True)
     parser.add_argument('--model-dir', required=True)
     parser.add_argument('--mode', choices=['classification', 'regression'], required=True)
     args = parser.parse_args()
 
     start_time = time.time()
 
-    # read data
-    df = pd.read_csv(args.train_csv)
+
+    # read small amount of data to parse dtypes and find datetime columns
+    df0 = pd.read_csv(args.train_csv, nrows=5000)
+    dtypes = df0.dtypes.map(lambda x: 'float32' if x=='float64' else x).to_dict()
+    datetime_cols = df0.columns[df0.columns.str.contains('datetime')].tolist()
+    # read full data with float32 instead of float64 and parsing datetime columns
+    df = pd.read_csv(args.train_csv, dtype=dtypes, parse_dates=datetime_cols)
+    # df = pd.read_csv(args.train_csv)
+
     y = df.target
     df.drop('target', axis=1, inplace=True)
-    is_big = df.memory_usage().sum() > BIG_DATASET_SIZE
+    is_big = df.memory_usage(deep=True).sum() > BIG_DATASET_SIZE
 
     print('Dataset read, shape {}'.format(df.shape))
     print('time elapsed: {}'.format(time.time()-start_time))
@@ -45,7 +52,8 @@ if __name__ == '__main__':
     model_config = {}
     model_config['is_big'] = is_big
     model_config['mode'] = args.mode
-
+    model_config['dtypes'] = dtypes
+    model_config['datetime_cols'] = datetime_cols
 
     # preprocessing
     df, model_config = preprocess(df, model_config, type='train')
@@ -87,8 +95,10 @@ if __name__ == '__main__':
     #   cross-validation with stacked ensemble is better, but too long
     # exclude_algos - list of algorithms to skip during model building, options:
     #   “GLM”, “GBM”, “DRF” (Random Forest and ExtraTrees), “DeepLearning” and “StackedEnsemble”
-    aml = H2OAutoML(max_runtime_secs=int((TIME_LIMIT-elapsed)*0.8),
-                    max_models=20, nfolds=0, exclude_algos=None, seed=42)
+    aml = H2OAutoML(max_runtime_secs=int((TIME_LIMIT-elapsed)*0.9),
+                    max_models=50, nfolds=0,
+                    exclude_algos=None,
+                    seed=42)
     aml.train(y = 'target', training_frame = train, validation_frame=None)
     print(aml.leaderboard)
 

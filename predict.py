@@ -32,7 +32,9 @@ if __name__ == '__main__':
         model_config = pickle.load(fin)
 
     # read data
-    df = pd.read_csv(args.test_csv)
+    # df = pd.read_csv(args.test_csv)
+    df = pd.read_csv(args.test_csv, dtype=model_config['dtypes'],
+                     parse_dates=model_config['datetime_cols'])
     print('Dataset read, shape {}'.format(df.shape))
     print('time elapsed: {}'.format(time.time()-start_time))
 

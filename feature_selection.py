@@ -21,7 +21,7 @@ def lgb_importance_fs(df, y, mode, BIG_DATASET_SIZE):
     coef = 0.5
 
     # dataframe size
-    df_size = df.memory_usage().sum()
+    df_size = df.memory_usage(deep=True).sum()
 
     # get subset of data if df is too big
     subset_size = min(df.shape[0], int(coef * df.shape[0] / (df_size / BIG_DATASET_SIZE)))
